@@ -1,0 +1,338 @@
+/* Global Fix for Horizontal Scrollbar */
+html, body {
+    overflow-x: hidden;
+    max-width: 100%;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    height: 100%;
+}
+
+*, *::before, *::after {
+    box-sizing: inherit;
+    max-width: 100%;
+}
+
+body { 
+    font-family: Arial, sans-serif; 
+    display: flex; 
+    flex-direction: column; 
+}
+
+#container { 
+    display: flex; 
+    flex: 1; 
+    width: 100%; 
+    height: calc(100vh - 100px); /* Account for footer height */
+}
+
+#left, #right { 
+    padding: 10px; 
+    overflow-y: auto; 
+}
+
+#left { 
+    width: 565px; /* Fixed width for the camera/photo area */
+    min-width: 565px;
+    background: #ffffff; 
+    text-align: center; 
+}
+
+#right { 
+    flex: 1;
+    background: #ffffff; 
+}
+
+/* Fix for gallery thumbnails */
+#gallery {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: flex-start;
+    padding: 10px;
+}
+
+/* Remove any potential character issues between thumbnails */
+#gallery a {
+    display: inline-block;
+    font-size: 0; /* Remove any potential character spacing */
+    line-height: 0;
+    text-decoration: none;
+    margin: 0;
+    padding: 0;
+}
+
+.thumbnail {
+    width: 100px;
+    cursor: pointer;
+    margin: 0;
+    border-radius: 5px;
+    transition: transform 0.2s ease-in-out;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+.thumbnail:hover {
+    transform: scale(1.05);
+    box-shadow: 3px 3px 8px rgba(0, 0, 0, 0.5);
+}
+
+/* Full-size image display */
+#fullImage {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 90%; /* Reduced from 100% to leave space for buttons */
+    background: rgba(0, 0, 0, 0.9);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+#largeImg {
+    max-width: 95%;
+    max-height: 90vh; /* Reduced from 95vh to ensure it doesn't overlap with buttons */
+    object-fit: contain;
+    margin: auto;
+}
+
+/* Footer voor dienstmededelingen */
+#footer {
+    background: black;
+    color: white;
+    text-align: center;
+    padding: 15px;
+    width: 100%;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    height: 100px; /* Increased height for more button space */
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.button-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 10px; /* Added margin for better spacing */
+}
+
+#footer button {
+    margin: 0 10px;
+    padding: 12px 20px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    min-width: 120px;
+}
+
+#footer button:hover {
+    background-color: #45a049;
+}
+
+#statusMessage {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 16px;
+}
+
+/* Styling for email sharing form */
+#shareForm {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    z-index: 1000;
+    width: 300px;
+    color: black;
+}
+
+#shareForm h3 {
+    margin-top: 0;
+    color: #333;
+}
+
+#shareForm input[type="email"] {
+    width: 90%;
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+#shareForm label {
+    display: block;
+    margin: 10px 0;
+    text-align: left;
+}
+
+#shareForm .buttons {
+    margin-top: 15px;
+    display: flex;
+    justify-content: space-between;
+}
+
+#shareForm button {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+#shareForm button.send {
+    background: #4CAF50;
+    color: white;
+}
+
+#shareForm button.cancel {
+    background: #f44336;
+    color: white;
+}
+
+#overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.7);
+    z-index: 999;
+}
+
+/* Dark overlay for when photo is taken */
+.dark-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: none;
+    z-index: 900;
+}
+
+/* Notification popup */
+#notification {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    z-index: 1001;
+    width: 300px;
+    color: black;
+    text-align: center;
+}
+
+#notification h3 {
+    margin-top: 0;
+    color: #333;
+}
+
+#notification button {
+    padding: 8px 20px;
+    background: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 15px;
+}
+
+/* Animation for saved photos */
+.photo-animation {
+    position: fixed;
+    width: 100px;
+    height: auto;
+    z-index: 1002;
+    animation: flyToGallery 1s forwards;
+}
+
+@keyframes flyToGallery {
+    0% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: translate(100%, 0) scale(0.2);
+        opacity: 0;
+    }
+}
+
+/* Navigation arrows for gallery */
+.nav-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    color: white;
+    font-size: 30px;
+    background: rgba(0,0,0,0.5);
+    width: 50px;
+    height: 50px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    border-radius: 50%;
+    z-index: 1001;
+}
+
+.left-arrow {
+    left: 20px;
+}
+
+.right-arrow {
+    right: 20px;
+}
+
+/* Responsive adjustments */
+@media screen and (max-width: 1200px) {
+    #container {
+        flex-direction: column;
+        height: auto;
+    }
+    
+    #left {
+        width: 100%;
+        min-width: auto;
+        height: 600px;
+    }
+    
+    #right {
+        width: 100%;
+        padding-bottom: 100px; /* Make space for the fixed footer */
+    }
+}
+
+@media screen and (max-width: 600px) {
+    #left {
+        height: 450px;
+    }
+    
+    #footer {
+        height: auto;
+    }
+    
+    #footer button {
+        font-size: 12px;
+        padding: 5px 8px;
+    }
+}

@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kunsthumaniora Sint-Lucas Gent - Fotobooth</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.min.js"></script>
+    <script src="sketch.js"></script>
+    <link rel="stylesheet" href="photobooth.css">
+    <link rel="stylesheet" href="css/global.css">
+    <style>
+        .student-menu {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            z-index: 100;
+        }
+        .student-menu a {
+            display: block;
+            margin: 5px 0;
+            color: #333;
+            text-decoration: none;
+            padding: 5px;
+            border-radius: 3px;
+        }
+        .student-menu a:hover {
+            background-color: #f0f0f0;
+        }
+        .student-menu .menu-section {
+            margin-top: 10px;
+            padding-top: 5px;
+            border-top: 1px solid #ddd;
+        }
+        .student-menu .menu-section-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #666;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body onload="updateGallery()">
+    <div class="student-menu">
+        <div class="menu-section-title">Studenten</div>
+        <a href="manage_students.php">Studenten Beheren</a>
+        <a href="import_students.php">Studenten Importeren</a>
+        <a href="manual_add_students.php">Studenten Toevoegen</a>
+        
+        <div class="menu-section">
+            <div class="menu-section-title">Klassen</div>
+            <a href="manage_classes.php">Klassen Beheren</a>
+            <a href="import_classes.php">Klassen Importeren</a>
+        </div>
+        
+        <div class="menu-section">
+            <div class="menu-section-title">Hulp</div>
+            <a href="guide.php">Handleiding</a>
+        </div>
+    </div>
+    
+    <div id="container">
+        <div id="left"></div>
+        <div id="right">
+            <div id="gallery"></div>
+        </div>
+    </div>
+    <div id="photoTakenOverlay" class="dark-overlay"></div>
+    <div id="fullImage" onclick="hideFullImage()">
+        <div class="nav-arrow left-arrow" onclick="navigateImage('prev'); event.stopPropagation();">&#10094;</div>
+        <img id="largeImg" src="">
+        <div class="nav-arrow right-arrow" onclick="navigateImage('next'); event.stopPropagation();">&#10095;</div>
+    </div>    
+    
+    <!-- Footer met dienstmededelingen en knoppen -->
+    <div id="footer">
+        <span id="statusMessage">Klaar om een foto te maken</span>
+        <div class="button-container">
+            <button onclick="saveImage()" id="saveBtn" >Opslaan</button>
+            <button id="takePhotoBtn" onclick="takePhoto()">Neem Foto</button>
+            <button onclick="retryPhoto()" id="retryBtn">Opnieuw Proberen</button>
+            <button onclick="openShareForm()" id="shareBtn">Delen via e-mail</button>
+            <button onclick="goBack()" id="backBtn">Terug</button>
+            <button onclick="goToStudentSystem()" id="studentBtn">Studenten Pasfoto's</button>
+        </div>
+    </div>
+
+    <!-- Overlay for the form and notifications -->
+    <div id="overlay"></div>
+    
+    <!-- Email sharing form -->
+    <div id="shareForm">
+        <h3>Deel deze foto via e-mail</h3>
+        <input type="email" id="shareEmail" placeholder="Voer e-mailadres in" required>
+        <label>
+            <input type="checkbox" id="newsletterSubscribe"> 
+            Ik wil me inschrijven voor de nieuwsbrief van Kunsthumaniora Sint-Lucas Gent
+        </label>
+        <div class="buttons">
+            <button class="cancel" onclick="closeShareForm()">Annuleren</button>
+            <button class="send" onclick="submitShareForm()">Versturen</button>
+        </div>
+    </div>
+    
+    <!-- Notification popup -->
+    <div id="notification">
+        <h3 id="notificationTitle">Bericht</h3>
+        <p id="notificationMessage"></p>
+        <button onclick="closeNotification()">OK</button>
+    </div>
+
+    <script>
+        // Global variables for image navigation
+        let currentImageIndex = -1;
+        let galleryImages = [];
+        
+        function showImage(src) {
+            let img = document.getElementById("largeImg");
+            img.src = src;
+            document.getElementById("statusMessage").innerText = "Klik om te sluiten!";
+            document.getElementById("fullImage").style.display = "flex";
+            document.getElementById("takePhotoBtn").style.display = "none";
+            document.getElementById("shareBtn").style.display = "inline";
+            document.getElementById("backBtn").style.display = "inline";
+            document.getElementById("studentBtn").style.display = "none";
+            
+            // Update gallery images array and find current index
+            updateGalleryImagesArray();
+            currentImageIndex = galleryImages.findIndex(imgSrc => imgSrc === src);
+            
+            // Update navigation arrows
+            updateNavigationArrows();
+        }
+        
+        function updateGalleryImagesArray() {
+            // Get all gallery image sources
+            galleryImages = [];
+            const galleryLinks = document.querySelectorAll('#gallery a');
+            galleryLinks.forEach(link => {
+                const imgSrc = link.querySelector('img').src;
+                galleryImages.push(imgSrc);
+            });
+        }
+        
+        function updateNavigationArrows() {
+            const leftArrow = document.querySelector('.left-arrow');
+            const rightArrow = document.querySelector('.right-arrow');
+            
+            // Show/hide left arrow (for previous images)
+            if (currentImageIndex > 0) {
+                leftArrow.style.display = 'flex';
+            } else {
+                leftArrow.style.display = 'none';
+            }
+            
+            // Show/hide right arrow (for next images)
+            if (currentImageIndex < galleryImages.length - 1) {
+                rightArrow.style.display = 'flex';
+            } else {
+                rightArrow.style.display = 'none';
+            }
+        }
+        
+        function navigateImage(direction) {
+            if (direction === 'prev' && currentImageIndex > 0) {
+                currentImageIndex--;
+                document.getElementById("largeImg").src = galleryImages[currentImageIndex];
+                updateNavigationArrows();
+            } else if (direction === 'next' && currentImageIndex < galleryImages.length - 1) {
+                currentImageIndex++;
+                document.getElementById("largeImg").src = galleryImages[currentImageIndex];
+                updateNavigationArrows();
+            }
+        }
+        
+        function hideFullImage() {
+            document.getElementById("fullImage").style.display = "none";
+            document.getElementById("takePhotoBtn").style.display = "inline";
+            document.getElementById("statusMessage").innerText = "Klaar om een foto te maken";
+            document.getElementById("shareBtn").style.display = "none";
+            document.getElementById("backBtn").style.display = "none";
+            document.getElementById("studentBtn").style.display = "inline"; // Show the Student button
+        }
+
+        function goBack() {
+            window.location.href = 'index.html';
+        }
+        
+        function goToStudentSystem() {
+            window.location.href = 'manage_students.php';
+        }
+        
+        function openShareForm() {
+            document.getElementById('overlay').style.display = 'block';
+            document.getElementById('shareForm').style.display = 'block';
+            document.getElementById('shareEmail').focus();
+        }
+        
+        function closeShareForm() {
+            document.getElementById('overlay').style.display = 'none';
+            document.getElementById('shareForm').style.display = 'none';
+            document.getElementById('shareEmail').value = '';
+            document.getElementById('newsletterSubscribe').checked = false;
+        }
+        
+        function showNotification(isSuccess, title, message) {
+            // Get notification elements
+            const notification = document.getElementById('notification');
+            const notificationTitle = document.getElementById('notificationTitle');
+            const notificationMessage = document.getElementById('notificationMessage');
+            
+            // Set content
+            notificationTitle.innerText = title;
+            notificationMessage.innerText = message;
+            
+            // Apply appropriate styling
+            notification.className = isSuccess ? 'success' : 'error';
+            
+            // Show notification and overlay
+            document.getElementById('overlay').style.display = 'block';
+            notification.style.display = 'block';
+        }
+        
+        function closeNotification() {
+            document.getElementById('notification').style.display = 'none';
+            document.getElementById('overlay').style.display = 'none';
+        }
+        
+        function submitShareForm() {
+            const email = document.getElementById('shareEmail').value;
+            const subscribeNewsletter = document.getElementById('newsletterSubscribe').checked;
+            
+            // Basic email validation
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                showNotification(false, "Fout", "Voer een geldig e-mailadres in.");
+                return;
+            }
+            
+            const imgSrc = document.getElementById("largeImg").src;
+            const imageUrl = imgSrc.split("/").pop(); // Get just the filename
+            
+            // Show loading message
+            const statusMessage = document.getElementById("statusMessage");
+            const originalMessage = statusMessage.innerText;
+            statusMessage.innerText = "E-mail wordt verzonden...";
+            
+            // Close the form while processing
+            closeShareForm();
+            
+            fetch('sendEmail.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    email: email,
+                    imageUrl: imageUrl,
+                    subscribeNewsletter: subscribeNewsletter
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    showNotification(true, "Succes", "De foto is succesvol verzonden naar " + email);
+                } else {
+                    showNotification(false, "Fout", "Er is een fout opgetreden bij het verzenden van de e-mail.");
+                }
+                statusMessage.innerText = originalMessage;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification(false, "Fout", "Er is een fout opgetreden bij het verzenden van de e-mail.");
+                statusMessage.innerText = originalMessage;
+            });
+        }
+        
+        function updateGallery() {
+            fetch("gallery.php")
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById("gallery").innerHTML = data;
+                });
+        }
+    </script>
+</body>
+</html>
